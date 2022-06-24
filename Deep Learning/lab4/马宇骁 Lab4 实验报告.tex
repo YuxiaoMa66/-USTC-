@@ -1,0 +1,515 @@
+\documentclass[a4paper,AutoFakeBold,AutoFakeSlant]{ctexart}
+\usepackage[a4paper,left=3cm,right=3cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{pythonhighlight}
+\usepackage[mathscr]{eucal}
+\usepackage{mathrsfs}
+\usepackage{booktabs}
+\usepackage{capt-of} 
+\usepackage{hyperref} 
+\usepackage{abstract}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage{enumerate}
+\usepackage{amsfonts} 
+% \usepackage{CJK,CJKnumb}
+\usepackage{float}
+\usepackage{gbt7714}
+\usepackage{framed}
+
+
+\newcommand{\song}{\CJKfamily{song}}    % 宋体   (Windows自带simsun.ttf)
+\newcommand{\fs}{\CJKfamily{fs}}        % 仿宋体 (Windows自带simfs.ttf)
+\newcommand{\kai}{\CJKfamily{kai}}      % 楷体   (Windows自带simkai.ttf)
+\newcommand{\hei}{\CJKfamily{hei}}      % 黑体   (Windows自带simhei.ttf)
+\newcommand{\li}{\CJKfamily{li}}        % 隶书   (Windows自带simli.ttf) 
+\newcommand{\ssong}{\CJKfamily{STSong}}
+
+\xeCJKsetup{SlantFactor = 0.3}
+% \xeCJKsetup{SlantFactor = -0.7}
+% \setCJKmainfont[BoldFont=simhei.ttf, SlantedFont=simkai.ttf]{simsun.ttc}
+
+
+
+% -- 中文字体 --
+%\setCJKmainfont{Microsoft YaHei}  % 微软雅黑
+%\setCJKmainfont{YouYuan}  % 幼圆
+%\setCJKmainfont{NSimSun}  % 新宋体
+%\setCJKmainfont{KaiTi}    % 楷体
+% \setCJKmainfont{SimSun}   % 宋体
+%\setCJKmainfont{SimHei}   % 黑体
+% \setCJKfamilyfont{hwsong}{STSong}
+ 
+% -- 英文字体 --
+% \setmainfont{Times New Roman}
+% \setmainfont{DejaVu Sans}
+% \setmainfont{Latin Modern Mono}
+% \setmainfont{Consolas}
+% \setmainfont{Courier New}
+
+
+\usepackage{xcolor}  	%高亮使用的颜色
+\definecolor{commentcolor}{RGB}{85,139,78}
+\definecolor{stringcolor}{RGB}{206,145,108}
+\definecolor{keywordcolor}{RGB}{34,34,250}
+\definecolor{backcolor}{RGB}{220,220,220}
+
+\usepackage{accsupp}	
+\newcommand{\emptyaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
+
+\usepackage{listings}
+\lstset{						%高亮代码设置
+	language=python, 					%Python语法高亮
+	linewidth=0.95\linewidth,      		%列表list宽度
+	%basicstyle=\ttfamily,				%tt无法显示空格
+	commentstyle=\color{commentcolor},	%注释颜色
+	keywordstyle=\color{keywordcolor},	%关键词颜色
+	stringstyle=\color{stringcolor},	%字符串颜色
+	%showspaces=true,					%显示空格
+	numbers=left,						%行数显示在左侧
+	numberstyle=\tiny\emptyaccsupp,		%行数数字格式
+	numbersep=5pt,						%数字间隔
+	frame=single,						%加框
+	framerule=0.1pt,						%划线
+	escapeinside=@@,					%逃逸标志
+	emptylines=1,						%
+	xleftmargin=3em,					%list左边距
+	backgroundcolor=\color{backcolor},	%列表背景色
+	tabsize=4,							%制表符长度为4个字符
+	% gobble=4							%忽略每行代码前4个字符
+}
+
+
+
+
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty}
+%去除摘要两边缩进
+\makeatletter
+  \renewenvironment{abstract}{%
+      \if@twocolumn
+        \section*{\abstractname}%
+      \else
+        \small
+        \begin{center}%
+          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
+        \end{center}%
+      \fi}
+      {}
+  \makeatother
+  \lstset{
+    language=Matlab,
+    keywords={break,case,catch,continue,else,elseif,end,for,function,
+       global,if,otherwise,persistent,return,switch,try,while},
+    basicstyle=\ttfamily,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{dkpurple},
+    backgroundcolor=\color{white},
+    tabsize=4,
+    showspaces=false,
+    showstringspaces=false
+ }
+
+\title{\textbf{\textsf{\heiti{深度学习Lab4实验报告}}}} 
+\author{\ssong PB19151769~~~~~~马宇骁}
+\date{}
+
+
+\begin{document}
+
+
+
+\maketitle
+
+
+% \begin{abstract}\zihao{-4} \kaishu
+% \noindent
+% \textbf{\heiti 摘要：} 
+% \newline
+% \textbf{\heiti 关键词：}
+% \end{abstract}
+
+\section{实验要求}
+Given three datasets (cora, citeseer, ppi), implement the GCN algorithm for node classification and link prediction, and analyse the effect of self-loop, number of layers, DropEdge, PairNorm, activation function and other factors on performance。
+
+
+\section{实验原理}
+对于图表示$G = (V, E)$。这里$V$是图中节点的集合，
+而$E$为边的集合，这里记图的节点数为$N$。一个$G$中有3个比较重要的矩阵：
+\begin{itemize}
+  \item 邻接矩阵$A$：adjacency matrix，用来表示节点间的连接关系，这里我们假定是0-1矩阵；
+  \item 度矩阵$D$：degree matrix，每个节点的度指的是其连接的节点数，这是一个对角矩阵，其中对角线元素 $D_{ii} = \sum_{j}A_{jj} $；
+  \item 特征矩阵$X$：用于表示节点的特征，$ X\in R^{N\times F} $，这里F是特征的维度；
+\end{itemize}
+
+\subsection{GCN}
+GCN（Graph Convolutional Networks），图卷积神经网络是一个特征提取器让我们可以使用这些特征去对图数据进行节点分类（node classification）、图分类（graph classification）、边预测（link prediction），还可以顺便得到图的嵌入表示（graph embedding）.
+用公式表达就是：
+\begin{equation}
+  H^{(k+1)}=f\left(H^{(k)}, A\right)
+\end{equation}
+这里k指的是网络层数，$H^{(k)}$就是网络第k层的特征，其中$H^{(0)} = X$. 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.25]{gcn.jpg}
+  \caption{GCN}
+  \label{f1}
+\end{figure}
+
+每个节点的新特征可以类似得到：对该节点的邻域节点特征进行变换，然后求和。采用加法规则时，对于度大的节点特征越来越大，而对于度小的节点却相反，这可能导致网络训练过程中梯度爆炸或者消失的问题。
+因此可以给图中每个节点增加自连接，实现上可以直接改变邻接矩阵，然后我们可以对邻接矩阵进行归一化，使得A的每行和值为1，在实现上我们可以乘以度矩阵的逆矩阵：$\tilde{D}^{-1} \tilde{A}$，
+更进一步地，我们可以采用对称归一化来进行聚合操作，这就是图卷积方法：
+\begin{equation}
+  H^{(k+1)}=f\left(H^{(k)}, A\right)=\sigma\left(\tilde{D}^{-0.5} \tilde{A} \tilde{D}^{-0.5} H^{(k)} W^{(k)}\right)
+\end{equation}
+
+这里：
+\begin{equation}
+  \begin{aligned}
+    \left(\tilde{D}^{-0.5} \tilde{A} \tilde{D}^{-0.5} H\right)_{i} &=\left(\tilde{D}^{-0.5} \tilde{A}\right)_{i} \tilde{D}^{-0.5} H \\
+    &=\left(\sum_{k} \tilde{D}_{i k}^{-0.5} \tilde{A}_{i}\right) \tilde{D}^{-0.5} H \\
+    &=\tilde{D}_{i i}^{-0.5} \sum_{j} \tilde{A}_{i j} \sum_{k} \tilde{D}_{j k}^{-0.5} H_{j} \\
+    &=\tilde{D}_{i i}^{-0.5} \sum_{j} \tilde{A}_{i j} \tilde{D}_{j j}^{-0.5} H_{j} \\
+    &=\sum_{j} \frac{1}{\sqrt{\tilde{D}_{i i} \tilde{D}_{j j}}} \tilde{A}_{i j} H_{j}
+    \end{aligned}
+\end{equation}
+
+\subsection{GraphSAGE}
+GCN是一种在图中结合拓扑结构和顶点属性信息学习顶点的embedding表示的方法。然而GCN要求在一个确定的图中去学习顶点的embedding，无法直接泛化到在训练过程没有出现过的顶点，即属于一种直推式(transductive)的学习。
+
+GraphSAGE则是一种能够利用顶点的属性信息高效产生未知顶点embedding的一种归纳式(inductive)学习的框架。
+其核心思想是通过学习一个对邻居顶点进行聚合表示的函数来产生目标顶点的embedding向量。
+
+GraphSAGE 是Graph SAmple and aggreGatE的缩写，其运行流程如上图所示，可以分为三个步骤:
+\begin{enumerate}
+  \item 对图中每个顶点邻居顶点进行采样 
+  \item 根据聚合函数聚合邻居顶点蕴含的信息 
+  \item 得到图中各顶点的向量表示供下游任务使用
+\end{enumerate}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{gra_r.jpg}
+  \caption{GraphSAGE}
+\end{figure}
+
+伪代码如下：
+\begin{equation}
+  \begin{array}{l}
+    \mathbf{h}_{v}^{0} \leftarrow \mathbf{x}_{v}, \forall v \in \mathcal{V} \\
+    \text { for } k=1 \ldots K \text { do } \\
+    \quad \begin{array}{l}
+    \text { for } v \in \mathcal{V} \text { do } \\
+    \quad \mathbf{h}_{\mathcal{N}(v)}^{k} \leftarrow \operatorname{AGGREGATE}_{k}\left(\left\{\mathbf{h}_{u}^{k-1}, \forall u \in \mathcal{N}(v)\right\}\right) \\
+    \mathbf{h}_{v}^{k} \leftarrow \sigma\left(\mathbf{W}^{k} \cdot \operatorname{CONCAT}\left(\mathbf{h}_{v}^{k-1}, \mathbf{h}_{\mathcal{N}(v)}^{k}\right)\right) \\
+    \text { end } \\
+    \mathbf{h}_{v}^{k} \leftarrow \mathbf{h}_{v}^{k} /\left\|\mathbf{h}_{v}^{k}\right\|_{2}, \forall v \in \mathcal{V} \\
+    \text { end } \\
+    \mathbf{z}_{v} \leftarrow \mathbf{h}_{v}^{K}, \forall v \in \mathcal{V}
+    \end{array}
+    \end{array}
+\end{equation}
+
+
+\section{实现及分析}
+利用助教提供的demo的代码，在node中构建GCN模型，并在后面的比较中使用PairNorm进一步对于模型进行优化，
+在link中的预训练处理数据时考虑加入或者不加入自环的连接方式，并在GraphSAGE中加入DropEdge继续优化模型。
+
+在这些过程中使用不同的三种激活函数横向对比模型训练：ReLu，Leaky\_ReLu，ELU.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.5]{lu.jpg}
+  \caption{激活函数}
+  \label{f2}
+\end{figure}
+
+\begin{enumerate}
+  \item Relu
+  
+  ReLU激活函数的提出就是为了解决梯度消失问题。ReLU的梯度只可以取两个值：0或1，当输入小于0时，梯度为0；当输入大于0时，梯度为1
+  好处就是：ReLU的梯度的连乘不会收敛到0，连乘的结果也只可以取两个值：0或1 。如果值为1，梯度保持值不变进行前向传播；如果值为0 ,梯度从该位置停止前向传播。
+  \item Leaky ReLU
+  
+  ReLU尽管稀疏性可以提升计算高效性，但同样也可能阻碍训练过程。通常，激活函数的输入值有一偏置项(bias)，假设bias变得太小，以至于输入激活函数的值总是负的，那么反向传播过程经过该处的梯度恒为0,对应的权重和偏置参数此次无法得到更新。如果对于所有的样本输入，该激活函数的输入都是负的，那么该神经元再也无法学习，称为神经元”死亡“问题。
+
+  Leaky ReLU的提出就是为了解决神经元”死亡“问题，Leaky ReLU与ReLU很相似，仅在输入小于0的部分有差别，ReLU输入小于0的部分值都为0，而LeakyReLU输入小于0的部分，值为负，且有微小的梯度
+  使用Leaky ReLU的好处就是：在反向传播过程中，对于Leaky ReLU激活函数输入小于零的部分，也可以计算得到梯度(而不是像ReLU一样值为0)，这样就避免了梯度方向锯齿问题。
+  \item ELU(Exponential Linear Unit)
+  
+  理想的激活函数应满足两个条件：
+
+1.输出的分布是零均值的，可以加快训练速度。
+
+2.激活函数是单侧饱和的，可以更好的收敛。
+
+LeakyReLU和PReLU满足第1个条件，不满足第2个条件；而ReLU满足第2个条件，不满足第1个条件。两个条件都满足的激活函数为ELU(Exponential Linear Unit)
+\begin{equation*}
+  f(x)=\left\{\begin{array}{ll}
+    x, & x>0 \\
+    \alpha\left(e^{x}-1\right), & x \leq 0
+    \end{array}\right.
+\end{equation*}
+\end{enumerate}
+
+\subsection{node}
+(由于ppi的形式和cora、citeseer不同，是20个图，因此在前两个的基础上再使用simple\_dataloader继续打乱之后再训练（训练函数train2稍有不同）)
+
+PairNorm是一种规范化的方法来处理过平滑问题。图神经网络（GNN）的性能随着层数的增加而逐渐降低。 这种衰减部分归因于过度平滑，其中重复的图形卷积最终使节点嵌入难以区分。
+PairNorm的关键思想是确保总的成对特征距离在各层之间保持恒定，使得相隔较远的节点对具有较少的相似特征，从而防止特征在整个群集中混合。
+
+PairNorm能被直接的运用，并且不会引入额外的参数，它被简单地运用在每一层（除了最后一层）的输出特征上，由简单的操作组成，主要是中心化和缩放，它们和输入的大小成线性关系。
+对于一些分类任务，运用浅层GNN就已经足够了，因此PairNorm虽然可以阻止性能随着层数增加显著下降，但是不一定能绝对提高性能。但是在现实世界中，有的分类任务，比如有一部分节点特征缺失，此时可能需要更广泛的邻域，也就是需要更深的层数，节点的特征才能被有效的恢复出来，这种情景下，深层GNN对分类任务更有效，这时运用PairNorm能显著超越其他模型，PairNorm的优势也就体现出来了。
+
+PariNorm能被表示为两步，中心化和放缩：
+\begin{equation}
+  \begin{array}{l}
+    \tilde{\mathbf{x}}_{i}^{c}=\tilde{\mathbf{x}}_{i}-\frac{1}{n} \sum_{i=1}^{n} \tilde{\mathbf{x}}_{i} \\
+    \dot{\mathbf{x}}_{i}=s \cdot \frac{\tilde{\mathbf{x}}_{i}^{c}}{\sqrt{\frac{1}{n} \sum_{i=1}^{n}\left\|\tilde{\mathbf{x}}_{i}^{c}\right\|_{2}^{2}}}=s \sqrt{n} \cdot \frac{\tilde{\mathbf{x}}_{i}^{c}}{\sqrt{\left\|\tilde{\mathbf{X}}^{c}\right\|_{F}^{2}}}
+    \end{array}
+\end{equation}
+
+在实验中，初试cora训练，用交叉熵作为损失计算方式，relu作为激活函数，层数设置为2，隐藏神经元为64，不使用pairnorm时，见图\ref{f3}。
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{coraacc.pdf}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{coraloss.pdf}
+  \end{minipage}
+  \caption{cora的训练信息}
+  \label{f3}
+\end{figure}
+
+考虑通过训练过程比较不同的层数对于模型结果的影响，对于cora数据集用交叉熵作为损失计算方式，relu作为激活函数，隐藏神经元为64，不使用pairnorm，
+层数设置为1-5五种，进行训练，绘制lossval图如图\ref{f4}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{coraloss2.pdf}
+  \caption{cora num\_layers}
+  \label{f4}
+\end{figure}
+可以看出此时，2层的结果明显优于其他的设置。再比较不同的隐藏神经元数量对于模型的影响，从8到64每隔8个训练一次，结果
+如图\ref{f5}.
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{coraloss3.pdf}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{coraloss4.pdf}
+  \end{minipage}
+  \caption{cora hidden\_dim}
+  \label{f5}
+\end{figure}
+比较显著的可以判断选择56作为隐藏神经元数相对最好。
+
+由此，选择用交叉熵作为损失计算方式，relu作为激活函数，隐藏神经元为56，不使用pairnorm，
+层数设置为2，再对citeseer数据集训练结果如图\ref{f6}.
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{citeacc.pdf}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{citeloss.pdf}
+  \end{minipage}
+  \caption{citeseer GCN}
+  \label{f6}
+\end{figure}
+训练结果为：
+\begin{quote}
+  (tensor(0.6740), tensor(1.0768))
+\end{quote}
+
+对于PPI数据集，simple\_dataloader之后随机取下标作为训练、测试、验证集，将20个图分别用上述的参数设置的
+模型进行训练，取每次训练结果的最大acc和最小lossval，对20组数据平均处理，结果为：
+\begin{quote}
+  (tensor(0.6570), tensor(1.0921))
+\end{quote}
+\begin{quote}
+  (tensor(0.7271), tensor(178.2713))
+\end{quote}
+
+
+\textbf{进一步分析:}
+
+还是使用cora数据集，由于PairNorm在深层才有作用，选2,4,8,16层再次训练（此时其他参数暂时选择之前上述的参数），
+结果如图\ref{f7}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{corapair.pdf}
+  \caption{cora PairNorm}
+  \label{f7}
+\end{figure}
+
+可以看出，对比相同层数的不用PairNorm的模型，使用PairNorm确实可以在深度加深的时候提高模型都性能。
+但是在我的GCN中，就算只使用2层的效果还是很好的。再比较不同的激活函数的影响（2层且不使用PairNorm，其他参数不变），
+再次对cora数据集训练，结果见图\ref{f8}.
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[scale=0.6]{coraELU.pdf}
+%   \caption{cora 激活函数影响}
+%   \label{f8}
+% \end{figure}
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{coraELU.pdf}
+  \caption{cora 激活函数影响}
+  \label{f8}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{ppiELU.pdf}
+  \caption{ppi 激活函数影响}
+  \label{f9}
+  \end{minipage}
+\end{figure}
+
+对这个数据集发现elu比relu明显好一些，leaky relu的效果和elu相似，由于citeseer和cora数据集的形式一样，用ppi的一个图再验证一下，
+结果如图\ref{f9}. ELU比较明显地合适一些。
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[scale=0.6]{ppiELU.pdf}
+%   \caption{ppi 激活函数影响}
+%   \label{f9}
+% \end{figure}
+
+\subsection{link}
+根据demo的算法，修改并整理为自己需要的函数模型，并在GraphSAGE中嵌入DropEdge，初始化为不使用。
+
+过拟合以及过平滑是影响节点分类准确度的两个主要阻碍。过拟合会弱化模型在小数据上的泛化能力，在深层网络中过平滑会使得输入的特征与输出的表示相隔离从而会妨碍模型的训练。
+
+DropEdge方法可以通过这种方法减弱过拟合以及过平滑所带来的问题。这种方法的核心是在每次训练中从输入的图中随机去掉一些边，就像是一个数据增强器以及消息传递的减弱器，然后，本文从理论上分析了DropEdge减弱过平滑的收敛速度以及减弱信息的损失。
+通过实验证明DropEdge方法可以增强浅层以及深层模型的能力。
+
+在每次训练过程中，DropEdge奖罚随机丢弃了一些边，使邻接矩阵A中的Vp个非零元素为零，其中V是边数，v是丢弃率，新产生的邻接矩阵为 $A_{drop}$:
+\begin{equation}
+  \boldsymbol{A}_{\text {drop }}=\boldsymbol{A}-\boldsymbol{A}^{\prime},
+\end{equation}
+
+使用dgl.add\_self\_loop()时，为图中的每个节点添加自循环并返回一个新图。
+
+由此，对于cora数据集先在不添加自环，不使用DropEdge，使用relu激活函数，2层时，从16到64每隔8个训练一次，对于隐藏神经元的
+训练结果见图\ref{f10}, acc为：
+\begin{quote}
+  [0.8977300599716987,
+ 0.9117045888457133,
+ 0.9217340131623278,
+ 0.9267437838323487,
+ 0.9325891152489836,
+ 0.9402106870914849,
+ 0.9371927854271019]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkcorahid.pdf}
+  \caption{cora GraphSAGE hidden\_dim}
+  \label{f10}
+\end{figure}
+
+56还是好，再比较层数的区别（隐藏为56，其他参数如上不变），从1到5的层数的训练结果见图\ref{f11}, 
+acc为：
+\begin{quote}
+  [0.9317652343837741,
+ 0.9341510747737024,
+ 0.9344480132970957,
+ 0.9169075267851127,
+ 0.9087837200422274]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkcoralay.pdf}
+  \caption{cora GraphSAGE num\_layers}
+  \label{f11}
+\end{figure}
+
+从结果上，3层的效果相对较好。在cora数据集上在比较有无DropEdge的区别(层数此时为3，其余参数不变)。
+对于使用DropEdge时，p的值从0.6开始每隔0.05取一个一直到1，将训练结果绘制如图\ref{f12}.此时，acc为：
+\begin{quote}
+  [0.8331048269356034,
+ 0.8451059050785024,
+ 0.8503807192111588,
+ 0.8613324049325036,
+ 0.8493897261966262,
+ 0.8611500190921137,
+ 0.8688376271871701,
+ 0.8509081107791829,
+ 0.8379668021832394,
+ 0.8599079086273892]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkcoradrop.pdf}
+  \caption{cora GraphSAGE DropEdge}
+  \label{f12}
+\end{figure}
+
+0.7,0.8,0.85的效果相对明显好一点，选0.85（它最大，loss第二好），比较不同激活函数,loss训练曲线见
+图\ref{f13}。acc为：
+\begin{quote}
+  [0.8595287617079581, 0.852263875474495, 0.8616455155993802]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkcoraact.pdf}
+  \caption{cora GraphSAGE 激活函数}
+  \label{f13}
+\end{figure}
+
+ELU激活时的loss收敛快效果好，但leaky\_relu的预测结果好，用ELU看有无自环的区别，
+结果如图\ref{f14}。acc为：
+\begin{quote}
+  [0.8354888704207004, 0.8626404500772348]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkcoraloop.pdf}
+  \caption{cora GraphSAGE 自环}
+  \label{f14}
+\end{figure}
+
+对于citeseer数据集，参数设定为隐藏神经元56，层数为3，激活函数使用ELU，使用DropEdge，p设置为0.85。
+对于有无自环的结果模型拟合见图\ref{f15}. acc为：
+\begin{quote}
+  [0.8602632210463906, 0.8880500309518897]
+\end{quote}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{linkciteloop.pdf}
+  \caption{citeseer GraphSAGE 自环}
+  \label{f15}
+\end{figure}
+
+对于ppi数据集，依旧采用随机打乱，将20张图一个一个学习模型，展示最终的平均值acc和loss为：\\
+无自环：
+\begin{quote}
+  tensor(0.6152, dtype=torch.float64) tensor(0.6691)
+\end{quote}
+有自环：
+\begin{quote}
+  tensor(0.6192, dtype=torch.float64) tensor(0.6646)
+\end{quote}
+
+
+\section{一点小总结}
+由于模型数据不是很大，因此在CPU和GPU上跑从速度上差别不大。但由于ppi的图如果循环建模读取放入GPU
+显存中，可能会有些困难（比如在node训练时一半显存爆了），所以最终剩余的学习都使用CPU训练。
+
+
+% \bibliographystyle{gbt7714-numerical}
+% % \bibliographystyle{7714-author-year}
+% \bibliography{bibl}
+
+\end{document}

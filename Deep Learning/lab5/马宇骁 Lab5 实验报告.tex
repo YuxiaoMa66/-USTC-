@@ -1,0 +1,406 @@
+\documentclass[a4paper,AutoFakeBold,AutoFakeSlant]{ctexart}
+\usepackage[a4paper,left=3cm,right=3cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{pythonhighlight}
+\usepackage[mathscr]{eucal}
+\usepackage{mathrsfs}
+\usepackage{booktabs}
+\usepackage{capt-of} 
+\usepackage{color}
+\usepackage[colorlinks,linkcolor=blue]{hyperref}
+\usepackage{abstract}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage{enumerate}
+\usepackage{amsfonts} 
+% \usepackage{CJK,CJKnumb}
+\usepackage{float}
+\usepackage{gbt7714}
+\usepackage{framed}
+
+
+\newcommand{\song}{\CJKfamily{song}}    % 宋体   (Windows自带simsun.ttf)
+\newcommand{\fs}{\CJKfamily{fs}}        % 仿宋体 (Windows自带simfs.ttf)
+\newcommand{\kai}{\CJKfamily{kai}}      % 楷体   (Windows自带simkai.ttf)
+\newcommand{\hei}{\CJKfamily{hei}}      % 黑体   (Windows自带simhei.ttf)
+\newcommand{\li}{\CJKfamily{li}}        % 隶书   (Windows自带simli.ttf) 
+\newcommand{\ssong}{\CJKfamily{STSong}}
+
+\xeCJKsetup{SlantFactor = 0.3}
+% \xeCJKsetup{SlantFactor = -0.7}
+% \setCJKmainfont[BoldFont=simhei.ttf, SlantedFont=simkai.ttf]{simsun.ttc}
+
+
+
+% -- 中文字体 --
+%\setCJKmainfont{Microsoft YaHei}  % 微软雅黑
+%\setCJKmainfont{YouYuan}  % 幼圆
+%\setCJKmainfont{NSimSun}  % 新宋体
+%\setCJKmainfont{KaiTi}    % 楷体
+% \setCJKmainfont{SimSun}   % 宋体
+%\setCJKmainfont{SimHei}   % 黑体
+% \setCJKfamilyfont{hwsong}{STSong}
+ 
+% -- 英文字体 --
+% \setmainfont{Times New Roman}
+% \setmainfont{DejaVu Sans}
+% \setmainfont{Latin Modern Mono}
+% \setmainfont{Consolas}
+% \setmainfont{Courier New}
+
+
+\usepackage{xcolor}  	%高亮使用的颜色
+\definecolor{commentcolor}{RGB}{85,139,78}
+\definecolor{stringcolor}{RGB}{206,145,108}
+\definecolor{keywordcolor}{RGB}{34,34,250}
+\definecolor{backcolor}{RGB}{220,220,220}
+
+\usepackage{accsupp}	
+\newcommand{\emptyaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
+
+\usepackage{listings}
+\lstset{						%高亮代码设置
+	language=python, 					%Python语法高亮
+	linewidth=0.95\linewidth,      		%列表list宽度
+	%basicstyle=\ttfamily,				%tt无法显示空格
+	commentstyle=\color{commentcolor},	%注释颜色
+	keywordstyle=\color{keywordcolor},	%关键词颜色
+	stringstyle=\color{stringcolor},	%字符串颜色
+	%showspaces=true,					%显示空格
+	numbers=left,						%行数显示在左侧
+	numberstyle=\tiny\emptyaccsupp,		%行数数字格式
+	numbersep=5pt,						%数字间隔
+	frame=single,						%加框
+	framerule=0.1pt,						%划线
+	escapeinside=@@,					%逃逸标志
+	emptylines=1,						%
+	xleftmargin=3em,					%list左边距
+	backgroundcolor=\color{backcolor},	%列表背景色
+	tabsize=4,							%制表符长度为4个字符
+	% gobble=4							%忽略每行代码前4个字符
+}
+
+
+
+
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty}
+%去除摘要两边缩进
+\makeatletter
+  \renewenvironment{abstract}{%
+      \if@twocolumn
+        \section*{\abstractname}%
+      \else
+        \small
+        \begin{center}%
+          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
+        \end{center}%
+      \fi}
+      {}
+  \makeatother
+  \lstset{
+    language=Matlab,
+    keywords={break,case,catch,continue,else,elseif,end,for,function,
+       global,if,otherwise,persistent,return,switch,try,while},
+    basicstyle=\ttfamily,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{dkpurple},
+    backgroundcolor=\color{white},
+    tabsize=4,
+    showspaces=false,
+    showstringspaces=false
+ }
+
+\title{\textbf{\textsf{\heiti{深度学习Lab5实验报告}}}} 
+\author{\ssong PB19151769~~~~~~马宇骁}
+\date{}
+
+
+\begin{document}
+
+
+
+\maketitle
+
+
+% \begin{abstract}\zihao{-4} \kaishu
+% \noindent
+% \textbf{\heiti 摘要：} 
+% \newline
+% \textbf{\heiti 关键词：}
+% \end{abstract}
+
+\section{实验要求}
+理解GAN并选择一种GAN的算法以及相关数据集实现。
+
+
+\section{实验原理}
+
+\subsection{GAN生成对抗网络概述}
+GAN包含有两个模型，一个是生成模型（generative model），一个是判别模型(discriminative model)。
+\begin{itemize}
+  \item 生成模型的任务是生成看起来自然真实的、和原始数据相似的实例。
+  \item 判别模型的任务是判断给定的实例看起来是自然真实的还是人为伪造的（真实实例来源于数据集，伪造实例来源于生成模型）。
+\end{itemize}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.4]{gan.png}
+  \caption{GAN}
+\end{figure}
+
+Generator是一个生成图片的网络，它接收一个随机的噪声z，通过这个噪声生成图片，记做G(z)。Discriminator是一个判别网络，判别一张图片是不是“真实的”。它的输入是x，x代表一张图片，输出D（x）代表x为真实图片的概率，如果为1，就代表100\%是真实的图片，而输出为0，就代表不可能是真实的图片。
+
+\subsection{训练}
+在训练过程中，生成网络的目标就是尽量生成真实的图片去欺骗判别网络D。而网络D的目标就是尽量把网络G生成的图片和真实的图片分别开来。
+对于GAN，情况就是生成模型 G 恢复了训练数据的分布（造出了和真实数据一模一样的样本），判别模型再也判别不出来结果，准确率为 50\%，约等于乱猜。这是双方网路都得到利益最大化，不再改变自己的策略，也就是不再更新自己的权重。
+
+定义目标函数为：
+\begin{equation}
+  \min _{G} \max _{D} V(D, G)=\mathbb{E}_{\boldsymbol{x} \sim p_{\text {dut }}(\boldsymbol{x})}[\log D(\boldsymbol{x})]+\mathbb{E}_{\boldsymbol{z} \sim p_{\boldsymbol{z}}(\boldsymbol{z})}[\log (1-D(G(\boldsymbol{z})))]
+\end{equation}
+即，G网络的loss是$\log (1-D(G(\boldsymbol{z}))$，而D的loss是$-(\log (D(\boldsymbol{x})) + \log (1-D(G(\boldsymbol{z}))))$. 
+
+训练网络D使得最大化D的损失。而训练过程中固定一方，更新另一个网络的参数，交替迭代，使得对方的错误最大化，最终，G 能估测出样本数据的分布，也就是生成的样本更加的真实。
+G网络的训练是希望$D(G(\boldsymbol{z}))$趋近于1，也就是正类，这样G的loss就会最小。而D网络的训练就是一个2分类，目标是分清楚真实数据和生成数据，也就是希望真实数据的D输出趋近于1，而生成数据的输出即$D(G(\boldsymbol{z}))$趋近于0，或是负类。
+
+\section{实验实现}
+实验选择深度卷积生成对抗网络（DCGAN）（本来是选消除马赛克，尝试几次发现很有趣，但是因为要查重，文件太多从头重构压力太大，只修改部分函数和调用方式怕查重不过）
+生成动漫头像。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.6]{dcgan.jpg}
+  \caption{DCGAN}
+\end{figure}
+
+DCGAN相对于原始的GAN并没有太大的改进，将全卷积神经网络应用到了GAN中，细节方面，DCGAN做了如下改进：
+\begin{enumerate}
+  \item 取消pooling层。G中用反卷积进行上采样，D中用加入stride的卷积代替pooling
+  \item batch normalization
+  \item 去掉FC层，网络为全卷积网络
+  \item G中使用Relu(最后一层用tanh)
+  \item D中用LeakyRelu
+\end{enumerate}
+
+训练细节：
+\begin{enumerate}
+  \item 预处理环节，将图像scale到tanh的[-1,1]
+  \item LeakyRelu的斜率是0.2
+  \item 使用Adam作为优化器，初始学习率0.0002，beta1参数设置为0.5（处于模型稳定性考虑）
+\end{enumerate}
+
+
+\subsection{Generator}
+\begin{python}
+class NetGenerator(nn.Module):
+  def __init__(self):
+      super(NetGenerator,self).__init__()
+      self.act1 = nn.ReLU(True)
+      self.covt1 = nn.ConvTranspose2d(noiseSize, n_generator_feature * 8, kernel_size=4, stride=1, padding=0, bias=False)
+      self.bn1 = nn.BatchNorm2d(n_generator_feature * 8)
+      self.covt2 = nn.ConvTranspose2d(n_generator_feature * 8, n_generator_feature * 4, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn2 = nn.BatchNorm2d(n_generator_feature * 4)
+      self.covt3 = nn.ConvTranspose2d(n_generator_feature * 4, n_generator_feature * 2, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn3 = nn.BatchNorm2d(n_generator_feature * 2)
+      self.covt4 = nn.ConvTranspose2d(n_generator_feature * 2, n_generator_feature, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn4 = nn.BatchNorm2d(n_generator_feature)
+      self.covt5 = nn.ConvTranspose2d(n_generator_feature, 3, kernel_size=5, stride=3, padding=1, bias=False)
+      self.act2 = nn.Tanh()
+      
+  def forward(self, input):
+      x = self.act1(self.bn1(self.covt1(input)))
+      x = self.act1(self.bn2(self.covt2(x)))
+      x = self.act1(self.bn3(self.covt3(x)))
+      x = self.act1(self.bn4(self.covt4(x)))
+      x = self.act2(self.covt5(x))
+      return x
+\end{python}
+
+其中，对于转置卷积
+\begin{equation*}
+  H^{\prime}=\left(H+(\text { stride }-1) *(H-1)-k_{h}+2 *\left(k_{h}-\text { padding }-1\right) / 1+1\right.
+\end{equation*}
+H为原始长度，kh为卷积核长度，p为padding大小，s为步长。
+
+n\_generator\_feature是全局变量在模型参数设置的生成器feature map数。
+在Generator的模型定义中，激活函数使用ReLu，使用5层的网络，将torch.randn随机生成的1*1噪声最终转化到96*96大小。
+
+在第一层将卷积核设置为4*4，步长为1，填充为0，此时根据公式计算得到逆卷积之后输出的维度为(n\_generator\_feature * 8) * 4 * 4；
+然后对输出进行归一化处理使得数据在进行Relu之前不会因为数据过大而导致网络性能的不稳定；再进行激活。
+后续3层中，将卷积核设置为4*4，步长为2，填充为1，让每次都输出长宽维度刚刚好都是输入的2倍。在2、3、4层继续进行
+归一化与激活。第5层将卷积核设置为5*5，步长为3，填充为1，需要最终输出结果，使用tanh将输出图片的像素映射化到(-1,1)空间作为返回值。
+
+\subsection{Discriminator}
+\begin{python}
+class NetDiscriminator(nn.Module):
+  def __init__(self):
+      super(NetDiscriminator,self).__init__()
+      self.act1 = nn.LeakyReLU(0.2, inplace=True)
+      self.conv1 = nn.Conv2d(3, n_discriminator_feature, kernel_size=5, stride=3, padding=1, bias=False)
+      self.conv2 = nn.Conv2d(n_discriminator_feature, n_discriminator_feature * 2, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn2 = nn.BatchNorm2d(n_discriminator_feature * 2)
+      self.conv3 = nn.Conv2d(n_discriminator_feature * 2, n_discriminator_feature * 4, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn3 = nn.BatchNorm2d(n_discriminator_feature * 4)
+      self.conv4 = nn.Conv2d(n_discriminator_feature * 4, n_discriminator_feature * 8, kernel_size=4, stride=2, padding=1, bias=False)
+      self.bn4 = nn.BatchNorm2d(n_discriminator_feature * 8)
+      self.conv5 = nn.Conv2d(n_discriminator_feature * 8, 1, kernel_size=4, stride=1, padding=0, bias=False)
+      self.act2 = nn.Sigmoid() 
+      
+  def forward(self, input):
+      x = self.act1(self.conv1(input))
+      x = self.act1(self.bn2(self.conv2(x)))
+      x = self.act1(self.bn3(self.conv3(x)))
+      x = self.act1(self.bn4(self.conv4(x)))
+      x = self.act2(self.conv5(x))
+      return x.view(-1)
+\end{python}
+
+其中，对于卷积
+\begin{equation*}
+  H_{out}=\left\lfloor\frac{H_{in }+2 \times p[0] - d[0] \times (kh[0] - 1)}{s[0]}+1 \right\rfloor
+\end{equation*}
+
+n\_discriminator\_feature是全局变量在模型参数设置的判别器feature map数。
+在Discriminator的模型定义中，激活函数使用LeakyReLU。按照作者的解释，激活函数的使用无本质区别，可能用ELU等其他的也行，但作者说：
+\begin{quote}
+  这里的选择更多的是经验总结。\cite{GAN生成动漫头像}
+\end{quote}
+因此就采取和作者相同的激活函数。
+
+在第一层将卷积核设置为5*5，步长为3，填充为1，此时根据公式计算得到卷积之后输出的维度为(n\_discriminator\_feature) * 32 * 32；
+再进行激活。
+后续3层中，将卷积核设置为4*4，步长为2，填充为1，让每次都输出长宽维度刚刚好都是输入的一半。在2、3、4层进行
+归一化与激活。第5层卷积核设置为4*4，步长为1，填充为0需要最终输出结果，使用Sigmoid将输出图片的像素映射化到(0,1)空间作为返回值。
+
+也就是说，Generator生成图片和Discriminator判别图片的处理原理是相反对称的。
+% 根据\textit{CycleGAN详细解读}\cite{最近对GAN}
+
+\subsection{Train}
+将Generator、Discriminator和相关参数以及损失函数噪声生成集成在GAN的类中初始化定义，并在模型中直接集成训练和展示。
+下面是GAN中的训练函数：
+\begin{python}
+def train(self, dataloader):
+  d_every = self.d
+  g_every = self.g
+  for i, (image,_) in tqdm(enumerate(dataloader)):       # type((image,_)) = <class 'list'>, len((image,_)) = 2 * 256 * 3 * 96 * 96
+      real_image = Variable(image)
+      real_image = real_image.to('cuda')
+
+      if (i + 1) % d_every == 0:
+          self.optimizer_d.zero_grad()
+          output = self.Discriminator(real_image)      # 尽可能把真图片判为True
+          error_d_real = self.criterion(output, self.true_labels)
+          error_d_real.backward()
+
+          self.noises.data.copy_(torch.randn(self.batch_size, self.noiseSize, 1, 1))
+          fake_img = self.Generator(self.noises).detach()       # 根据噪声生成假图
+          fake_output = self.Discriminator(fake_img)       # 尽可能把假图片判为False
+          error_d_fake = self.criterion(fake_output, self.fake_labels)
+          error_d_fake.backward()
+          self.optimizer_d.step()
+
+      if (i + 1) % g_every == 0:
+          self.optimizer_g.zero_grad()
+          self.noises.data.copy_(torch.randn(self.batch_size, self.noiseSize, 1, 1))
+          fake_img = self.Generator(self.noises)        # 这里没有detach
+          fake_output = self.Discriminator(fake_img)       # 尽可能让Discriminator把假图片判为True
+          error_g = self.criterion(fake_output, self.true_labels)
+          error_g.backward()
+          self.optimizer_g.step()
+          ## 在训练判别器时，需要对生成器生成的图片用detach操作进行计算图截断，避免反向传播将梯度传到生成器中。因为在训练判别器时我们不需要训练生成器，也就不需要生成器的梯度。
+\end{python}
+
+其中，d\_every定义每几个batch训练一次discriminator；g\_every定义每几个batch训练一次generator。
+
+训练时，对于假图片，在训练判别器时，尽量输出0；训练生成器时，尽量输出1。训练生成器时，无须调整判别器的参数；训练判别器时，无须调整生成器的参数。
+
+\subsection{结果}
+将batch size设置为512
+总共训练了66次迭代（因为在之前的测试中79次的时候内存爆了），修改模型都过程中的一次训练录频见：
+
+\href{https://rec.ustc.edu.cn/share/7259c0e0-ebe3-11ec-a564-eb71e104f879}{myx的录频video} 
+
+设置plot\_epoch = [1,5,10,20,30,40,50,60,65,66]，在这几个结果进行输出生成的动漫头像如下：
+% \newpage
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output1.pdf}
+  \caption{第1次迭代}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output5.pdf}
+  \caption{第5次迭代}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output10.pdf}
+  \caption{第10次迭代}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output20.pdf}
+  \caption{第20次迭代}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output30.pdf}
+  \caption{第30次迭代}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output40.pdf}
+  \caption{第40次迭代}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output50.pdf}
+  \caption{第50次迭代}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output60.pdf}
+  \caption{第60次迭代}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output65.pdf}
+  \caption{第65次迭代}
+  \end{minipage}
+  \begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \includegraphics[width=6.5cm]{output66.pdf}
+  \caption{第66次迭代}
+  \end{minipage}
+\end{figure}
+
+看得出训练的效果还是很好的，从噪声数据很快地在迭代中输出了肉眼可见是动漫头像的图像。
+
+
+
+\bibliographystyle{gbt7714-numerical}
+% % \bibliographystyle{7714-author-year}
+% \bibliographystyle{ieeetr}
+\bibliography{bibl}
+
+\end{document}

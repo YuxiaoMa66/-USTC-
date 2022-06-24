@@ -1,0 +1,320 @@
+\documentclass[a4paper,AutoFakeBold,AutoFakeSlant]{ctexart}
+\usepackage[a4paper,left=3cm,right=3cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{pythonhighlight}
+\usepackage[mathscr]{eucal}
+\usepackage{mathrsfs}
+\usepackage{booktabs}
+\usepackage{capt-of} 
+\usepackage{hyperref} 
+\usepackage{abstract}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage{float}
+
+% -- 中文字体 --
+%\setCJKmainfont{Microsoft YaHei}  % 微软雅黑
+%\setCJKmainfont{YouYuan}  % 幼圆
+%\setCJKmainfont{NSimSun}  % 新宋体
+%\setCJKmainfont{KaiTi}    % 楷体
+% \setCJKmainfont{SimSun}   % 宋体
+%\setCJKmainfont{SimHei}   % 黑体
+ 
+% -- 英文字体 --
+\setmainfont{Times New Roman}
+% \setmainfont{DejaVu Sans}
+% \setmainfont{Latin Modern Mono}
+% \setmainfont{Consolas}
+
+\usepackage{xcolor}  	%高亮使用的颜色
+\definecolor{commentcolor}{RGB}{85,139,78}
+\definecolor{stringcolor}{RGB}{206,145,108}
+\definecolor{keywordcolor}{RGB}{34,34,250}
+\definecolor{backcolor}{RGB}{220,220,220}
+
+\usepackage{accsupp}	
+\newcommand{\emptyaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
+
+\usepackage{listings}
+\lstset{						%高亮代码设置
+	language=python, 					%Python语法高亮
+	linewidth=0.95\linewidth,      		%列表list宽度
+	%basicstyle=\ttfamily,				%tt无法显示空格
+	commentstyle=\color{commentcolor},	%注释颜色
+	keywordstyle=\color{keywordcolor},	%关键词颜色
+	stringstyle=\color{stringcolor},	%字符串颜色
+	%showspaces=true,					%显示空格
+	numbers=left,						%行数显示在左侧
+	numberstyle=\tiny\emptyaccsupp,		%行数数字格式
+	numbersep=5pt,						%数字间隔
+	frame=single,						%加框
+	framerule=0.1pt,						%划线
+	escapeinside=@@,					%逃逸标志
+	emptylines=1,						%
+	xleftmargin=3em,					%list左边距
+	backgroundcolor=\color{backcolor},	%列表背景色
+	tabsize=4,							%制表符长度为4个字符
+	% gobble=4							%忽略每行代码前4个字符
+}
+
+
+
+
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty}
+%去除摘要两边缩进
+\makeatletter
+  \renewenvironment{abstract}{%
+      \if@twocolumn
+        \section*{\abstractname}%
+      \else
+        \small
+        \begin{center}%
+          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
+        \end{center}%
+      \fi}
+      {}
+  \makeatother
+  \lstset{
+    language=Matlab,
+    keywords={break,case,catch,continue,else,elseif,end,for,function,
+       global,if,otherwise,persistent,return,switch,try,while},
+    basicstyle=\ttfamily,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{dkpurple},
+    backgroundcolor=\color{white},
+    tabsize=4,
+    showspaces=false,
+    showstringspaces=false
+ }
+
+
+
+
+\title{\heiti{深度学习Lab1实验报告}}
+\author{PB19151769~~~~~~马宇骁}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}\zihao{-4} \kaishu
+\noindent 
+\textbf{\heiti 摘要：}简单描述fine tuning(dropout、normalization、learning rate decay、residual 
+connection、网络深度等), 最后的test准确率，对比，以及Loss随着epoc改变的曲线。
+   \newline
+\textbf{\heiti 关键词：}深度学习，CNN，ResNet
+\end{abstract}
+
+
+\section{实验目标}
+使用pytorch或者tensorflow实现卷积神经网络，在ImageNet数据集上进行图片分类。研究dropout、
+normalization、learning rate decay、residual connection、网络深度等超参数对分类性能的影响。
+
+
+
+\section{网络模型代码结构}
+
+
+\subsection{CNN}
+\subsubsection{简述}
+卷积神经网络主要由这几类层构成：输入层、卷积层，ReLU层、池化（Pooling）层和全连接层。
+通过将这些层叠加起来，就可以构建一个完整的卷积神经网络。
+
+由于参数共享，每个滤波器包含 $F*F*D$ 个权重，卷积层一共有 $F*F*D_1*K$ 个权重和 K 个偏置。
+在输出数据体中，第d个深度切片（空间尺寸是 $W_2*H_2$ ），用第d个滤波器和输入数据进行有效卷
+积运算的结果（使用步长S），最后在加上第d个偏差。
+
+在连续的卷积层之间会周期性地插入一个池化层。它的作用是逐渐降低数据体的空间尺寸，
+这样的话就能减少网络中参数的数量，使得计算资源耗费变少，也能有效控制过拟合。
+
+穿插使用归一化，ReLU，Dropout（在训练过程的前向传播中，让每个神经元以一定概率p处于不激活的状态。以达到减少过拟合的效果。），
+最后全连接完成整个CNN。
+\begin{itemize}
+  \item $ INPUT \rightarrow [CONV \rightarrow RELU \rightarrow CONV \rightarrow RELU \rightarrow POOL]*n_1 \rightarrow [FC \rightarrow RELU]*n_2 \rightarrow FC   $
+\end{itemize}
+
+\subsubsection{实现}
+根据书上LeNet-5和AlexNet的方法考虑借鉴其中的算法，使用5*5的卷积核，2*2的池化层，发现一次train的准确率太低不足0.5个百分点；然后考虑使用5*5的卷积层，步长2，
+零填充等类似后者的5层卷积层2层全连接层（AlexNet为3层，但执行速度太慢），结果改进并不显著，只达到0.7-0.9的准确率百分点。于是进行多次尝试，例如:
+
+\textsc{Python}程序显示如下：
+\begin{python}
+  ####################### task 1.1 ##########################
+  self.relu0 = nn.ReLU()
+  self.mp = nn.MaxPool2d(2) # 池化之后的size变成(32*32*32)
+    # O = （I - K + 2P）/ S +1
+
+  self.conv1 = nn.Sequential(nn.Conv2d(32, 64, 5,stride=1,padding=0),
+                              nn.Dropout(0.5),
+                              nn.BatchNorm2d(64),                         
+                              nn.ReLU(),
+                              nn.MaxPool2d(2)) # \rightarrow (14*14*64)
+  self.conv2 = nn.Sequential(nn.Conv2d(64, 512, 3,stride=1,padding=1), 
+                              nn.Dropout(0.5),
+                              nn.BatchNorm2d(512),
+                              nn.ReLU(),
+                              nn.MaxPool2d(2)) #  -> (7*7*512)
+  self.conv3 = nn.Sequential(nn.Conv2d(512,512,2,stride=1,padding=0), 
+                              nn.Dropout(0.5), 
+                              nn.BatchNorm2d(512),
+                              nn.ReLU(),
+                              nn.MaxPool2d(2)) #  (3*3*512)
+  self.dense = nn.Sequential(nn.Linear(3*3*512, 3*3*512),
+                              nn.ReLU(),
+                              nn.Dropout(0.5),
+                              nn.Linear(3*3*512,200))  
+#发现这样准确率还是太低了emmm
+\end{python}
+最终在查阅资料-尝试的反复循环中，使用如下CNN模型加上助教的第一层，共6层网络，其单次train的准确率可以到2.3-8.9个百分点。
+
+\textsc{Python}程序显示如下：
+\begin{python}
+  self.conv1 = nn.Conv2d(32, 64, 2, stride = 1, padding=1)
+  self.bn1 = nn.BatchNorm2d(64)
+
+  self.conv2 = nn.Conv2d(64, 192, 2, stride=1, padding=1)
+  self.bn2 = nn.BatchNorm2d(192)
+
+  self.conv3 = nn.Conv2d(192, 256, 2, stride=1, padding=1)
+  self.bn3 = nn.BatchNorm2d(256)
+  
+  self.conv4 = nn.Conv2d(256, 256, 3, stride=1, padding=1)
+  self.bn4 = nn.BatchNorm2d(256)
+
+  self.maxpool = nn.MaxPool2d(3, 2)
+
+  # self.fc1 = nn.Linear(192*3*3, 192*3*3)
+  self.fc2 = nn.Linear(256*3*3, 200)
+\end{python}
+
+
+\subsection{ResNet}
+\subsubsection{简述}
+ResNet是解决了深度CNN模型难训练的问题。
+对于一个堆积层结构（几层堆积而成）当输入为 $x$ 时其学习到的特征记为 $H(x)$ ，
+现在我们希望其可以学习到残差 $F(x) = H(x) - x$ ，这样其实原始的学习特征是 $F(x)+x$ 。
+之所以这样是因为残差学习相比原始特征直接学习更容易。当残差为0时，此时堆积层仅仅做了恒等映射，
+至少网络性能不会下降，实际上残差不会为0，这也会使得堆积层在输入特征基础上学习到新的特征，从而拥有更好的性能。
+
+\subsubsection{实现}
+由于残差网络学习的更好的特性，因此，在构建补全时，加上助教的一层使用6层网络，对于优化单次train的准确率就相比CNN容易，采用如下5+1层残差网络的
+第一次尝试就突破2个百分点大关，就不再继续修改折磨。
+
+\textsc{Python}程序显示如下：
+\begin{python}
+  ######################## task 2.2 ##########################
+  self.conv1 = nn.Sequential(nn.MaxPool2d(kernel_size=3,stride=2,padding=1),
+                             ResNetLayer(64,64,False),
+                             ResNetLayer(64,64,False),
+                             ResNetLayer(64,64,False))
+  self.conv2 = nn.Sequential(ResNetLayer(64,128,True),
+                             ResNetLayer(128,128,False),
+                             ResNetLayer(128,128,False),
+                             ResNetLayer(128,128,False))
+  self.conv3 = nn.Sequential(ResNetLayer(128,256,True),
+                             ResNetLayer(256,256,False),
+                             ResNetLayer(256,256,False),
+                             ResNetLayer(256,256,False))
+  self.conv4 = nn.Sequential(ResNetLayer(256,512,True),
+                             ResNetLayer(512,512,False),
+                             ResNetLayer(512,512,False))
+  self.avg_pool = nn.AdaptiveAvgPool2d(1)
+  self.fc = nn.Linear(512, 200)
+\end{python}
+
+
+
+\section{训练模型完成及分析}
+
+\subsection{综述}
+
+训练模型要求通过读取data数据集里的train的90000张训练图片进行图片学习，最后预测test的10000张图片来测试预测的模型的准确率。
+
+考虑到在CNN模型单次运行train函数在本人所使用的笔记本电脑（HUAWEI matebookX Pro2019，显卡MX250）所需时间15分钟，第一次尝试预测运行了7个小时且因为模型
+优化不佳准确率偏低整个事件过于离谱，
+因此，采取用59元租用两块gtx1060的服务器一天来训练模型。
+
+\subsubsection{补全及改进}
+
+对于助教所提供的train的代码框架，发现只判断是否将模型放在gpu上训练，于是，考虑修改为使用两块gpu进行并行计算加速训练
+（实际发现并行计算确实能加速大约180-190$\%$），如下：
+
+\textsc{Python}程序显示如下：
+\begin{python}
+  # model = CNN()
+  model = ResNet()
+  model.apply(init_weights)
+
+  # if gpu:
+  #     model.cuda()
+
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  if torch.cuda.device_count() > 1:
+      model = nn.DataParallel(model)
+  model.to(device) #用两块1060加速
+\end{python}
+
+然后预想设置maxepoch为40，学习速率0.015.此时，构建一个优化器对象Optimizer，用来保存当前的状态，并能够根据计算得到的梯度来更新参数；
+之后再利用ReduceLROnPlateau来更新学习率，用min模式检测metric是否不再减小，patience用10作为不再减小的累计次数，最小的允许lr
+设置为1e-5，其他的参数均为默认值；最后设置使用交叉熵损失函数作为每次的交叉损失的计算方式。
+
+对于validate，test函数，检测准确性，不用.train()，故采取与train类似的方式完成。
+
+对于fit函数，需要判断是否需要提前退出，即early$\_$stop$\_$counter大于patience的时候，不再迭代，更新模型权重之后退出循环，返回相应值。期间保留准确性和损失，方差历史。
+
+最后的模型测试之前需要先将模型储存，再继续将单gpu改为并行计算进行测试，保留历史。
+
+最后将历史进行作图，得到曲线。
+
+\subsection{CNN}
+
+使用自己编写的CNN模型，将fit函数的调用参数中的maxepoch设置为40，单开GPU时发现一个单次trian需要大约1.5分钟，双开并行计算时大约48秒。
+最终，在40次迭代之后，发现最后输出如下：
+\begin{itemize}
+  \item 29.099999999999998
+\end{itemize}
+
+将模型保存，进行测试，结果如下：
+\begin{itemize}
+  \item Test Loss:  0.0496  $|$  Test Accuracy: 28.6700
+\end{itemize}
+
+大于20个百分点，可以认为效果不错。将Loss 和Accuracy随着epoc 改变的曲线以及方差曲线展示如下：
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{cnn.png}
+  \caption{CNN}
+  \label{}
+\end{figure}
+
+\subsection{ResNet}
+
+由于发现在一次train单开GPU需要6分钟，并行计算也需要3分半，因此在ResNet网络的fit参数中的maxepoch设置为15减小运行总时间。
+最终，训练结果最后输出如下：
+\begin{itemize}
+  \item 23.400000000000002
+\end{itemize}
+
+可以肯定，残差网络的训练预测模型确实比普通的卷积网络优秀，在训练次数明显小的情况下也能得到较为良好的模型训练结果。
+模型保存测试结果如下：
+\begin{itemize}
+  \item Test Loss:  0.0587  $|$  Test Accuracy: 22.8100
+\end{itemize}
+
+将Loss 和Accuracy随着epoc 改变的曲线以及方差曲线展示如下：
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{res.png}
+  \caption{ResNet}
+  \label{}
+\end{figure}
+
+
+\end{document}
