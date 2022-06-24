@@ -1,4 +1,4 @@
-# some-bisic-python-info-project
+# some-basic-python-info-project
 
 This repository includes basic skills needed when using python as your coding language
 
