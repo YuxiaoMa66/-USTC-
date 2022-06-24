@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2020/W32TeX)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: elegantpaper-cn.aux
+The style file: elsarticle-num.bst
+Database file #1: wx.bib
+Warning--empty year in 李鑫宇0信息熵的来源与应用
+Warning--empty year in 决策树算法中基尼指数与信息增益的比较
+You've used 2 entries,
+            2952 wiz_defined-function locations,
+            676 strings with 5267 characters,
+and the built_in function-call counts, 400 in all, are:
+= -- 26
+> -- 8
+< -- 0
++ -- 4
+- -- 2
+* -- 12
+:= -- 73
+add.period$ -- 2
+call.type$ -- 2
+change.case$ -- 2
+chr.to.int$ -- 0
+cite$ -- 4
+duplicate$ -- 14
+empty$ -- 51
+format.name$ -- 2
+if$ -- 99
+int.to.chr$ -- 0
+int.to.str$ -- 2
+missing$ -- 2
+newline$ -- 14
+num.names$ -- 2
+pop$ -- 14
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 36
+stack$ -- 0
+substring$ -- 0
+swap$ -- 0
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 2
+while$ -- 2
+width$ -- 3
+write$ -- 21
+(There were 2 warnings)

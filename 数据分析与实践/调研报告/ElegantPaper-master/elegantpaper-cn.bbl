@@ -1,0 +1,14 @@
+\begin{thebibliography}{1}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+
+\bibitem{李鑫宇0信息熵的来源与应用}
+李鑫宇, 信息熵的来源与应用, 文理导航·教育研究与实践.
+
+\bibitem{决策树算法中基尼指数与信息增益的比较}
+夏风之羽, 决策树算法中基尼指数与信息增益的比较, CSDN.
+
+\end{thebibliography}
