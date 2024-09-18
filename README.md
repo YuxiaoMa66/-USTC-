@@ -1,5 +1,3 @@
 # some-basic-python-info-project
 
-This repository includes basic skills needed when using python as your coding language
-
-**Of course**  and some projects done by python
+一些ustc上课的时候自己的资料
